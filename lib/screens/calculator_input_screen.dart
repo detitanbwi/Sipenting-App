@@ -160,7 +160,7 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                   Container(
                     width: 40,
                     height: 4,
-                    margin: const EdgeInsets.bottom: 16),
+                    margin: const EdgeInsets.only(bottom: 16.0),
                     decoration: BoxDecoration(
                       color: AppColors.outlineVariant,
                       borderRadius: BorderRadius.circular(2),

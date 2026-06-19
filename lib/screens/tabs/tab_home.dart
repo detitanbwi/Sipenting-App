@@ -33,7 +33,7 @@ class _TabHomeState extends State<TabHome> {
       ]);
 
       setState(() {
-        _namaIbu = results[0]['namaIbu'] ?? 'Ibu';
+        _namaIbu = (results[0] as Map<String, dynamic>)['namaIbu'] ?? 'Ibu';
         _children = results[1] as List<dynamic>;
         _articles = results[2] as List<dynamic>;
         _isLoading = false;
