@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../theme/typography.dart';
+import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,9 +24,99 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  void _showProgressDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return PopScope(
+          canPop: false,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                  const SizedBox(width: 20.0),
+                  Text(
+                    'Memverifikasi...',
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded, color: AppColors.error),
+              const SizedBox(width: 8.0),
+              Text(title, style: AppTypography.titleLarge),
+            ],
+          ),
+          content: Text(message, style: AppTypography.bodyMedium),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Tutup',
+                style: AppTypography.labelLarge.copyWith(color: AppColors.primary),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      _showProgressDialog();
+      try {
+        final username = _emailController.text.trim();
+        await ApiService.login(username);
+
+        if (mounted) {
+          Navigator.pop(context); // Close progress dialog
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        }
+      } on TimeoutException catch (_) {
+        if (mounted) {
+          Navigator.pop(context); // Close progress dialog
+          _showErrorDialog(
+            'Koneksi Lambat',
+            'Waktu permintaan habis (timeout 10 detik). Harap periksa koneksi internet Anda.',
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Close progress dialog
+          final errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _showErrorDialog('Gagal Masuk', errorMessage);
+        }
+      }
     }
   }
 

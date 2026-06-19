@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../theme/colors.dart';
 import '../theme/typography.dart';
+import '../services/api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,22 +21,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirmPassword = true;
 
   // Dropdown States
-  List<dynamic> _regencies = [];
   List<dynamic> _districts = [];
   List<dynamic> _villages = [];
 
-  String? _selectedRegencyCode;
   String? _selectedDistrictCode;
   String? _selectedVillageCode;
 
-  bool _isLoadingRegencies = false;
   bool _isLoadingDistricts = false;
   bool _isLoadingVillages = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchRegencies();
+    _fetchKecamatan();
   }
 
   @override
@@ -48,30 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchRegencies() async {
-    setState(() {
-      _isLoadingRegencies = true;
-    });
-    try {
-      final response = await http.get(
-        Uri.parse('https://wilayah.id/api/regencies/35.json'),
-      );
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        setState(() {
-          _regencies = decoded['data'] ?? [];
-        });
-      }
-    } catch (e) {
-      debugPrint('Error fetching regencies: $e');
-    } finally {
-      setState(() {
-        _isLoadingRegencies = false;
-      });
-    }
-  }
-
-  Future<void> _fetchDistricts(String regencyCode) async {
+  Future<void> _fetchKecamatan() async {
     setState(() {
       _isLoadingDistricts = true;
       _districts = [];
@@ -80,17 +54,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _selectedVillageCode = null;
     });
     try {
-      final response = await http.get(
-        Uri.parse('https://wilayah.id/api/districts/$regencyCode.json'),
-      );
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        setState(() {
-          _districts = decoded['data'] ?? [];
-        });
-      }
+      final data = await ApiService.getKecamatan();
+      setState(() {
+        _districts = data.map((item) {
+          final id = item['id_kecamatan'] ?? item['id'] ?? item['code'];
+          final name = item['nama_kecamatan'] ?? item['nama'] ?? item['name'];
+          return {
+            'code': id.toString(),
+            'name': name.toString(),
+          };
+        }).toList();
+      });
     } catch (e) {
-      debugPrint('Error fetching districts: $e');
+      debugPrint('Error fetching kecamatan: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat kecamatan: ${e.toString().replaceFirst('Exception: ', '')}',
+              style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     } finally {
       setState(() {
         _isLoadingDistricts = false;
@@ -98,24 +86,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _fetchVillages(String districtCode) async {
+  Future<void> _fetchDesa(String districtCode) async {
     setState(() {
       _isLoadingVillages = true;
       _villages = [];
       _selectedVillageCode = null;
     });
     try {
-      final response = await http.get(
-        Uri.parse('https://wilayah.id/api/villages/$districtCode.json'),
-      );
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        setState(() {
-          _villages = decoded['data'] ?? [];
-        });
-      }
+      final data = await ApiService.getDesa(districtCode);
+      setState(() {
+        _villages = data.map((item) {
+          final id = item['id_desa'] ?? item['id'] ?? item['code'];
+          final name = item['nama_desa'] ?? item['nama'] ?? item['name'];
+          return {
+            'code': id.toString(),
+            'name': name.toString(),
+          };
+        }).toList();
+      });
     } catch (e) {
       debugPrint('Error fetching villages: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat desa: ${e.toString().replaceFirst('Exception: ', '')}',
+              style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     } finally {
       setState(() {
         _isLoadingVillages = false;
@@ -212,15 +214,80 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  void _handleRegister() {
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded, color: AppColors.error),
+              const SizedBox(width: 8.0),
+              Text(title, style: AppTypography.titleLarge),
+            ],
+          ),
+          content: Text(message, style: AppTypography.bodyMedium),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Tutup',
+                style: AppTypography.labelLarge.copyWith(color: AppColors.primary),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showProgressDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return PopScope(
+          canPop: false,
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                  const SizedBox(width: 20.0),
+                  Text(
+                    'Mendaftarkan Akun...',
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleRegister() async {
     if (_formKey.currentState!.validate()) {
-      if (_selectedRegencyCode == null ||
-          _selectedDistrictCode == null ||
-          _selectedVillageCode == null) {
+      if (_selectedDistrictCode == null || _selectedVillageCode == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Harap lengkapi pilihan Wilayah (Kabupaten, Kecamatan, Desa)',
+              'Harap lengkapi pilihan Wilayah (Kecamatan, Desa)',
               style: AppTypography.bodyMedium.copyWith(color: Colors.white),
             ),
             backgroundColor: AppColors.error,
@@ -232,7 +299,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
         return;
       }
-      _showSuccessPopup();
+
+      _showProgressDialog();
+      try {
+        final username = _nikController.text.trim();
+        final namaIbu = _nameController.text.trim();
+        final idDesa = _selectedVillageCode!;
+
+        await ApiService.register(
+          username: username,
+          namaIbu: namaIbu,
+          idDesa: idDesa,
+        );
+
+        if (mounted) {
+          Navigator.pop(context); // Close progress dialog
+          _showSuccessPopup();
+        }
+      } on TimeoutException catch (_) {
+        if (mounted) {
+          Navigator.pop(context); // Close progress dialog
+          _showErrorDialog(
+            'Koneksi Lambat',
+            'Waktu permintaan habis (timeout 10 detik). Harap periksa koneksi internet Anda.',
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Close progress dialog
+          final errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _showErrorDialog('Gagal Registrasi', errorMessage);
+        }
+      }
     }
   }
 
@@ -436,48 +534,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20.0),
-                      // Dropdown: Kabupaten
-                      _buildDropdownDecoration(
-                        label: 'Kabupaten / Kota',
-                        isLoading: _isLoadingRegencies,
-                        child: DropdownButton<String>(
-                          isExpanded: true,
-                          value: _selectedRegencyCode,
-                          hint: Text(
-                            'Pilih Kabupaten',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.onSurfaceVariant.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                          ),
-                          icon: const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                          items: _regencies.map<DropdownMenuItem<String>>((
-                            dynamic item,
-                          ) {
-                            return DropdownMenuItem<String>(
-                              value: item['code'],
-                              child: Text(
-                                item['name'] ?? '',
-                                style: AppTypography.bodyMedium,
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (String? code) {
-                            if (code != null) {
-                              setState(() {
-                                _selectedRegencyCode = code;
-                              });
-                              _fetchDistricts(code);
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 20.0),
                       // Dropdown: Kecamatan
                       _buildDropdownDecoration(
                         label: 'Kecamatan',
@@ -485,14 +541,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: DropdownButton<String>(
                           isExpanded: true,
                           value: _selectedDistrictCode,
-                          disabledHint: Text(
-                            'Pilih Kabupaten Terlebih Dahulu',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.onSurfaceVariant.withValues(
-                                alpha: 0.4,
-                              ),
-                            ),
-                          ),
                           hint: Text(
                             'Pilih Kecamatan',
                             style: AppTypography.bodyMedium.copyWith(
@@ -516,16 +564,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             );
                           }).toList(),
-                          onChanged: _selectedRegencyCode == null
-                              ? null
-                              : (String? code) {
-                                  if (code != null) {
-                                    setState(() {
-                                      _selectedDistrictCode = code;
-                                    });
-                                    _fetchVillages(code);
-                                  }
-                                },
+                          onChanged: (String? code) {
+                            if (code != null) {
+                              setState(() {
+                                _selectedDistrictCode = code;
+                              });
+                              _fetchDesa(code);
+                            }
+                          },
                         ),
                       ),
                       const SizedBox(height: 20.0),
