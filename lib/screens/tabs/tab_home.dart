@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import '../calculator_select_profile_screen.dart';
 import '../children_management_screen.dart';
 import '../../services/api_service.dart';
+import '../article_detail_screen.dart';
 
 class TabHome extends StatefulWidget {
   const TabHome({super.key});
@@ -383,18 +385,9 @@ class _TabHomeState extends State<TabHome> {
 
     return Column(
       children: displayList.map((item) {
-        final String title = item['judul'] ?? '';
-        final String category = item['kategori'] ?? 'Pencegahan';
-        final String desc = item['deskripsi'] ?? '';
-        final String readTime = '${_calculateReadTime(desc)} Mnt Baca';
-
         return Padding(
           padding: const EdgeInsets.only(bottom: 12.0),
-          child: _buildArticleItem(
-            title: title,
-            category: category,
-            readTime: readTime,
-          ),
+          child: _buildArticleItem(item),
         );
       }).toList(),
     );
@@ -512,83 +505,119 @@ class _TabHomeState extends State<TabHome> {
     );
   }
 
-  Widget _buildArticleItem({
-    required String title,
-    required String category,
-    required String readTime,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.onSurface.withOpacity(0.02),
-            blurRadius: 16.0,
-            offset: const Offset(0, 8),
+  Widget _buildArticleItem(Map<String, dynamic> item) {
+    final String title = item['judul'] ?? '';
+    final String category = item['kategori'] ?? 'Pencegahan';
+    final String desc = item['deskripsi'] ?? '';
+    final String readTime = '${_calculateReadTime(desc)} Mnt Baca';
+    final String? urlVideo = item['url_video'];
+    final String? videoId = (urlVideo != null && urlVideo.isNotEmpty) ? YoutubePlayer.convertUrlToId(urlVideo) : null;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ArticleDetailScreen(article: item),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0,
-                        vertical: 4.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondaryFixed.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(6.0),
-                      ),
-                      child: Text(
-                        category,
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.onSecondaryContainer,
-                          fontSize: 10.0,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(16.0),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.onSurface.withOpacity(0.02),
+              blurRadius: 16.0,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0,
+                          vertical: 4.0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondaryFixed.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(6.0),
+                        ),
+                        child: Text(
+                          category,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.onSecondaryContainer,
+                            fontSize: 10.0,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8.0),
-                    Text(
-                      readTime,
-                      style: AppTypography.bodySmall.copyWith(fontSize: 10.0),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8.0),
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.titleSmall.copyWith(
-                    fontWeight: FontWeight.bold,
+                      const SizedBox(width: 8.0),
+                      Flexible(
+                        child: Text(
+                          readTime,
+                          style: AppTypography.bodySmall.copyWith(fontSize: 10.0),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8.0),
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.titleSmall.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 16.0),
-          Container(
-            width: 70.0,
-            height: 70.0,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(12.0),
+            const SizedBox(width: 16.0),
+            Container(
+              width: 70.0,
+              height: 70.0,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(12.0),
+                image: videoId != null
+                    ? DecorationImage(
+                        image: NetworkImage('https://img.youtube.com/vi/$videoId/0.jpg'),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: videoId != null
+                  ? Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.play_circle_filled_rounded,
+                          color: Colors.white,
+                          size: 28.0,
+                        ),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.article_outlined,
+                      color: AppColors.primary,
+                      size: 28.0,
+                    ),
             ),
-            child: const Icon(
-              Icons.article_outlined,
-              color: AppColors.primary,
-              size: 28.0,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
