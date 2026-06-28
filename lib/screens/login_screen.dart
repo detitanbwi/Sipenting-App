@@ -14,13 +14,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -43,7 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                   ),
                   const SizedBox(width: 20.0),
                   Text(
@@ -82,7 +81,9 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () => Navigator.pop(context),
               child: Text(
                 'Tutup',
-                style: AppTypography.labelLarge.copyWith(color: AppColors.primary),
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ],
@@ -238,80 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20.0),
-                      // Password Field
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Password',
-                            style: AppTypography.labelMedium.copyWith(
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'Lupa Password?',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8.0),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        style: AppTypography.bodyMedium,
-                        decoration: InputDecoration(
-                          hintText: '••••••••',
-                          hintStyle: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.onSurfaceVariant.withOpacity(0.5),
-                          ),
-                          filled: true,
-                          fillColor: AppColors.surfaceContainerLow,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20.0,
-                            vertical: 16.0,
-                          ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24.0),
-                            borderSide: BorderSide.none,
-                          ),
-                          errorStyle: AppTypography.bodySmall.copyWith(
-                            color: AppColors.error,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Harap masukkan password Anda';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 32.0),
-                      // Login Button
+                      const SizedBox(height: 16.0), // Login Button
                       ElevatedButton(
                         onPressed: _handleLogin,
                         style: ElevatedButton.styleFrom(

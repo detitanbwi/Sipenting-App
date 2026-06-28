@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import '../calculator_select_profile_screen.dart';
 import '../children_management_screen.dart';
 import '../../services/api_service.dart';
+import '../../services/offline_article_service.dart';
+import '../../widgets/article_thumbnail.dart';
 import '../article_detail_screen.dart';
 
 class TabHome extends StatefulWidget {
@@ -19,6 +22,7 @@ class _TabHomeState extends State<TabHome> {
   String _namaIbu = 'Ibu';
   List<dynamic> _children = [];
   List<dynamic> _articles = [];
+  bool _isOffline = false;
 
   @override
   void initState() {
@@ -26,7 +30,28 @@ class _TabHomeState extends State<TabHome> {
     _loadDashboardData();
   }
 
+  Future<bool> _checkConnectivity() async {
+    // connectivity_plus v6.x always returns List<ConnectivityResult>
+    final results = await Connectivity().checkConnectivity();
+    return results.any((r) => r != ConnectivityResult.none);
+  }
+
   Future<void> _loadDashboardData() async {
+    final isOnline = await _checkConnectivity();
+
+    if (!isOnline) {
+      // Offline: load artikel tersimpan saja, data user/anak tidak bisa diupdate
+      final saved = await OfflineArticleService.getSavedArticles();
+      if (mounted) {
+        setState(() {
+          _articles = saved;
+          _isLoading = false;
+          _isOffline = true;
+        });
+      }
+      return;
+    }
+
     try {
       final results = await Future.wait([
         ApiService.getUser(),
@@ -34,16 +59,25 @@ class _TabHomeState extends State<TabHome> {
         ApiService.getArticles(),
       ]);
 
-      setState(() {
-        _namaIbu = (results[0] as Map<String, dynamic>)['namaIbu'] ?? 'Ibu';
-        _children = results[1] as List<dynamic>;
-        _articles = results[2] as List<dynamic>;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _namaIbu = (results[0] as Map<String, dynamic>)['namaIbu'] ?? 'Ibu';
+          _children = results[1] as List<dynamic>;
+          _articles = results[2] as List<dynamic>;
+          _isLoading = false;
+          _isOffline = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      // Gagal fetch: fallback ke artikel tersimpan
+      final saved = await OfflineArticleService.getSavedArticles();
+      if (mounted) {
+        setState(() {
+          _articles = saved;
+          _isLoading = false;
+          _isOffline = saved.isNotEmpty;
+        });
+      }
     }
   }
 
@@ -384,12 +418,40 @@ class _TabHomeState extends State<TabHome> {
     final displayList = _articles.take(2).toList();
 
     return Column(
-      children: displayList.map((item) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12.0),
-          child: _buildArticleItem(item),
-        );
-      }).toList(),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_isOffline)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12.0),
+              border: Border.all(color: Colors.orange.withOpacity(0.4)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.wifi_off_rounded, color: Colors.orange, size: 16.0),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: Text(
+                    'Mode Offline — Menampilkan artikel yang tersimpan',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.orange.shade800,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ...displayList.map((item) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: _buildArticleItem(item),
+          );
+        }),
+      ],
     );
   }
 
@@ -509,9 +571,14 @@ class _TabHomeState extends State<TabHome> {
     final String title = item['judul'] ?? '';
     final String category = item['kategori'] ?? 'Pencegahan';
     final String desc = item['deskripsi'] ?? '';
-    final String readTime = '${_calculateReadTime(desc)} Mnt Baca';
+    final String readTime = '${_calculateReadTime(desc)} Menit Baca';
     final String? urlVideo = item['url_video'];
     final String? videoId = (urlVideo != null && urlVideo.isNotEmpty) ? YoutubePlayer.convertUrlToId(urlVideo) : null;
+    final String? gambar = item['gambar'] as String?;
+    final bool hasPoster = gambar != null && gambar.isNotEmpty && gambar != 'gambar2';
+    final String? posterUrl = hasPoster
+        ? 'https://sipenting.bondowosokab.go.id/storage/artikel/$gambar'
+        : null;
 
     return GestureDetector(
       onTap: () {
@@ -523,10 +590,10 @@ class _TabHomeState extends State<TabHome> {
         );
       },
       child: Container(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16.0),
+          borderRadius: BorderRadius.circular(24.0),
           boxShadow: [
             BoxShadow(
               color: AppColors.onSurface.withOpacity(0.02),
@@ -535,86 +602,97 @@ class _TabHomeState extends State<TabHome> {
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8.0,
-                          vertical: 4.0,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondaryFixed.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(6.0),
-                        ),
-                        child: Text(
-                          category,
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.onSecondaryContainer,
-                            fontSize: 10.0,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8.0),
-                      Flexible(
-                        child: Text(
-                          readTime,
-                          style: AppTypography.bodySmall.copyWith(fontSize: 10.0),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10.0,
+                    vertical: 4.0,
                   ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.titleSmall.copyWith(
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryFixed.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Text(
+                    category,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.onSecondaryContainer,
+                      fontSize: 10.0,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
+                ),
+                const SizedBox(width: 8.0),
+                Flexible(
+                  child: Text(
+                    readTime,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.onSurfaceVariant.withOpacity(0.6),
+                      fontSize: 11.0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Tampilkan 1 gambar saja: YouTube thumb jika ada video, poster jika tidak
+            if (videoId != null) ...[
+              const SizedBox(height: 12.0),
+              ArticleThumbnail(
+                articleId: item['id']?.toString() ?? '',
+                networkUrl: 'https://img.youtube.com/vi/$videoId/0.jpg',
+                height: 160.0,
+                showPlayButton: true,
+              ),
+            ] else if (hasPoster) ...[
+              const SizedBox(height: 12.0),
+              ArticleThumbnail(
+                articleId: item['id']?.toString() ?? '',
+                networkUrl: posterUrl,
+                height: 160.0,
+                showPlayButton: false,
+              ),
+            ],
+            const SizedBox(height: 16.0),
+            Text(
+              title,
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
+                height: 1.3,
               ),
             ),
-            const SizedBox(width: 16.0),
-            Container(
-              width: 70.0,
-              height: 70.0,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12.0),
-                image: videoId != null
-                    ? DecorationImage(
-                        image: NetworkImage('https://img.youtube.com/vi/$videoId/0.jpg'),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
+            const SizedBox(height: 8.0),
+            Text(
+              desc,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+                height: 1.4,
               ),
-              child: videoId != null
-                  ? Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.play_circle_filled_rounded,
-                          color: Colors.white,
-                          size: 28.0,
-                        ),
-                      ),
-                    )
-                  : const Icon(
-                      Icons.article_outlined,
-                      color: AppColors.primary,
-                      size: 28.0,
-                    ),
+            ),
+            const SizedBox(height: 16.0),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Baca Selengkapnya',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 4.0),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: AppColors.primary,
+                  size: 16.0,
+                ),
+              ],
             ),
           ],
         ),

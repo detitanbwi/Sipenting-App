@@ -1,9 +1,37 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 import '../theme/colors.dart';
 import '../theme/typography.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthAndNavigate();
+  }
+
+  Future<void> _checkAuthAndNavigate() async {
+    // Tunggu sebentar agar splash screen sempat tampil
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    // Load token dari secure storage
+    await ApiService.loadToken();
+
+    if (!mounted) return;
+
+    if (ApiService.token != null && ApiService.token!.isNotEmpty) {
+      // Token ada — langsung ke dashboard
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    }
+    // Kalau tidak ada token, biarkan user tap tombol Masuk
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +44,7 @@ class SplashScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              // Asymmetric / Editorial Brand Header
+              // Logo
               Center(
                 child: Container(
                   width: 160,
@@ -37,7 +65,6 @@ class SplashScreen extends StatelessWidget {
                     'assets/images/logo_sipenting.png',
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
-                      // Fallback if image has loading/reading issue
                       return const Icon(
                         Icons.child_care_rounded,
                         size: 80,
@@ -79,7 +106,7 @@ class SplashScreen extends StatelessWidget {
                 ),
               ),
               const Spacer(flex: 2),
-              // Soft CTA Button Area
+              // CTA Button
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacementNamed(context, '/login');
@@ -87,14 +114,14 @@ class SplashScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.onPrimary,
-                  minimumSize: const Size.fromHeight(56.0),
-                  elevation: 0,
+                  minimumSize: const Size(double.infinity, 56.0),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28.0), // Pill format
+                    borderRadius: BorderRadius.circular(16.0),
                   ),
+                  elevation: 0,
                 ),
                 child: Text(
-                  'Mulai Sekarang',
+                  'Masuk',
                   style: AppTypography.labelLarge.copyWith(
                     color: AppColors.onPrimary,
                     fontSize: 16.0,

@@ -22,7 +22,7 @@ class CalculatorInputScreen extends StatefulWidget {
 class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
-  
+
   String _measurementPosition = 'Berdiri';
   String _selectedTab = 'tumbuh_kembang';
 
@@ -35,13 +35,18 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
     name = name.toLowerCase();
     if (name.contains('pokok') || name.contains('nasi')) {
       return Icons.rice_bowl_rounded;
-    } else if (name.contains('lauk') || name.contains('lauk pauk') || name.contains('ayam') || name.contains('telur')) {
+    } else if (name.contains('lauk') ||
+        name.contains('lauk pauk') ||
+        name.contains('ayam') ||
+        name.contains('telur')) {
       return Icons.egg_alt_rounded;
     } else if (name.contains('sayur')) {
       return Icons.eco_rounded;
     } else if (name.contains('buah')) {
       return Icons.apple_rounded;
-    } else if (name.contains('cairan') || name.contains('air') || name.contains('susu')) {
+    } else if (name.contains('cairan') ||
+        name.contains('air') ||
+        name.contains('susu')) {
       return Icons.water_drop_rounded;
     }
     return Icons.restaurant_rounded;
@@ -81,7 +86,9 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
     final heightText = _heightController.text.trim();
     if (heightText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap masukkan tinggi/panjang badan anak')),
+        const SnackBar(
+          content: Text('Harap masukkan tinggi/panjang badan anak'),
+        ),
       );
       return;
     }
@@ -89,7 +96,9 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
     );
 
     try {
@@ -128,7 +137,9 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
     );
 
     try {
@@ -168,7 +179,9 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                   ),
                   Text(
                     'Hasil Analisis Nutrisi',
-                    style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+                    style: AppTypography.titleLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16.0),
                   Expanded(
@@ -190,7 +203,9 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
 
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12.0),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
                           color: AppColors.surfaceContainerLowest,
                           elevation: 0,
                           child: Padding(
@@ -199,26 +214,36 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Text(
                                         foodName,
-                                        style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                                        style: AppTypography.titleMedium
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10.0,
+                                        vertical: 4.0,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: statusColor.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8.0),
+                                        borderRadius: BorderRadius.circular(
+                                          8.0,
+                                        ),
                                       ),
                                       child: Text(
                                         keterangan.split('!')[0],
-                                        style: AppTypography.labelSmall.copyWith(
-                                          color: statusColor,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        style: AppTypography.labelSmall
+                                            .copyWith(
+                                              color: statusColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ),
                                   ],
@@ -226,10 +251,14 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                                 if (keterangan.contains('!')) ...[
                                   const SizedBox(height: 8.0),
                                   Text(
-                                    keterangan.substring(keterangan.indexOf('!') + 1).trim(),
-                                    style: AppTypography.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                                    keterangan
+                                        .substring(keterangan.indexOf('!') + 1)
+                                        .trim(),
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
                                   ),
-                                ]
+                                ],
                               ],
                             ),
                           ),
@@ -248,7 +277,10 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                         borderRadius: BorderRadius.circular(16.0),
                       ),
                     ),
-                    child: const Text('Selesai', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Selesai',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
@@ -272,7 +304,10 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.onSurface),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.onSurface,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -324,15 +359,18 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                             Text(
                               'Mengukur untuk profil:',
                               style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.onSurfaceVariant.withOpacity(0.8),
+                                color: AppColors.onSurfaceVariant.withOpacity(
+                                  0.8,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 2.0),
                             Text(
                               widget.childName,
                               style: AppTypography.titleMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary),
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
                             ),
                           ],
                         ),
@@ -404,7 +442,7 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                   icon: Icons.scale_rounded,
                 ),
                 const SizedBox(height: 24.0),
-                
+
                 Text(
                   'Tinggi/Panjang Badan (cm)',
                   style: AppTypography.titleMedium.copyWith(
@@ -418,29 +456,8 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                   hint: 'Contoh: 85.0',
                   icon: Icons.height_rounded,
                 ),
-                const SizedBox(height: 24.0),
-                
-                Text(
-                  'Posisi Pengukuran Tinggi',
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 12.0),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildRadioOption('Berdiri'),
-                    ),
-                    const SizedBox(width: 16.0),
-                    Expanded(
-                      child: _buildRadioOption('Telentang'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40.0),
-                
+                const SizedBox(height: 32.0),
+
                 ElevatedButton(
                   onPressed: _hitungStunting,
                   style: ElevatedButton.styleFrom(
@@ -476,9 +493,13 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                   ),
                 ),
                 const SizedBox(height: 24.0),
-                
+
                 _isLoadingFoods
-                    ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      )
                     : Column(
                         children: _foods.map((food) {
                           final int id = food['id'];
@@ -488,7 +509,7 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                         }).toList(),
                       ),
                 const SizedBox(height: 32.0),
-                
+
                 ElevatedButton(
                   onPressed: _hitungNutrisi,
                   style: ElevatedButton.styleFrom(
@@ -543,11 +564,7 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                   color: AppColors.primaryContainer.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12.0),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppColors.primary,
-                  size: 22.0,
-                ),
+                child: Icon(icon, color: AppColors.primary, size: 22.0),
               ),
               const SizedBox(width: 16.0),
               Expanded(
@@ -649,10 +666,15 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
         style: AppTypography.bodyLarge.copyWith(color: AppColors.onSurface),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: AppTypography.bodyLarge.copyWith(color: AppColors.onSurfaceVariant.withOpacity(0.5)),
+          hintStyle: AppTypography.bodyLarge.copyWith(
+            color: AppColors.onSurfaceVariant.withOpacity(0.5),
+          ),
           prefixIcon: Icon(icon, color: AppColors.outline),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20.0,
+            vertical: 16.0,
+          ),
         ),
       ),
     );
@@ -669,7 +691,9 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryContainer.withOpacity(0.2) : AppColors.surfaceVariant,
+          color: isSelected
+              ? AppColors.primaryContainer.withOpacity(0.2)
+              : AppColors.surfaceVariant,
           borderRadius: BorderRadius.circular(16.0),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -703,7 +727,9 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12.0),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.surfaceContainerLowest : Colors.transparent,
+          color: isSelected
+              ? AppColors.surfaceContainerLowest
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12.0),
           boxShadow: isSelected
               ? [
@@ -721,14 +747,18 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
             Icon(
               icon,
               size: 18.0,
-              color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant.withOpacity(0.6),
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.onSurfaceVariant.withOpacity(0.6),
             ),
             const SizedBox(width: 8.0),
             Text(
               label,
               style: AppTypography.titleSmall.copyWith(
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant.withOpacity(0.8),
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant.withOpacity(0.8),
                 fontSize: 13.0,
               ),
             ),
