@@ -109,6 +109,7 @@ class _CalculatorSelectProfileScreenState extends State<CalculatorSelectProfileS
                       final String name = child['nama'] ?? '';
                       final String age = _formatAge(child['umur']);
                       final String gender = child['kelamin'] == 'L' ? 'Laki-laki' : 'Perempuan';
+                      final String tanggalLahir = child['tanggalLahir'] ?? '';
                       
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16.0),
@@ -118,6 +119,7 @@ class _CalculatorSelectProfileScreenState extends State<CalculatorSelectProfileS
                           name: name,
                           age: age,
                           gender: gender,
+                          tanggalLahir: tanggalLahir,
                         ),
                       );
                     }),
@@ -135,6 +137,7 @@ class _CalculatorSelectProfileScreenState extends State<CalculatorSelectProfileS
     required String name,
     required String age,
     required String gender,
+    required String tanggalLahir,
   }) {
     return GestureDetector(
       onTap: () {
@@ -144,6 +147,7 @@ class _CalculatorSelectProfileScreenState extends State<CalculatorSelectProfileS
             builder: (context) => CalculatorInputScreen(
               childId: childId,
               childName: name,
+              tanggalLahir: tanggalLahir,
             ),
           ),
         );

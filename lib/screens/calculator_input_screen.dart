@@ -8,11 +8,13 @@ import '../services/api_service.dart';
 class CalculatorInputScreen extends StatefulWidget {
   final int childId;
   final String childName;
+  final String tanggalLahir;
 
   const CalculatorInputScreen({
     super.key,
     required this.childId,
     required this.childName,
+    required this.tanggalLahir,
   });
 
   @override
@@ -20,10 +22,8 @@ class CalculatorInputScreen extends StatefulWidget {
 }
 
 class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
-  final _weightController = TextEditingController();
   final _heightController = TextEditingController();
 
-  String _measurementPosition = 'Berdiri';
   String _selectedTab = 'tumbuh_kembang';
 
   bool _isLoadingFoods = true;
@@ -77,7 +77,6 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
 
   @override
   void dispose() {
-    _weightController.dispose();
     _heightController.dispose();
     super.dispose();
   }
@@ -128,6 +127,54 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
   }
 
   Future<void> _hitungNutrisi() async {
+    // Validasi umur: hitung dari tanggalLahir, harus 6-59 bulan
+    final tgl = DateTime.tryParse(widget.tanggalLahir);
+    if (tgl != null) {
+      final now = DateTime.now();
+      final umurBulan =
+          (now.year - tgl.year) * 12 + (now.month - tgl.month);
+      if (umurBulan < 6 || umurBulan > 59) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            title: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded,
+                    color: Colors.orange, size: 24.0),
+                const SizedBox(width: 8.0),
+                const Text('Tidak Dapat Dihitung'),
+              ],
+            ),
+            content: Text(
+              'Kalkulator nutrisi hanya tersedia untuk anak usia 6–59 bulan. '
+              'Usia ${widget.childName} saat ini $umurBulan bulan.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Mengerti'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    }
+
+    // Validasi: minimal 1 item harus > 0
+    final hasInput = _nutritionPortions.values.any((v) => v > 0);
+    if (!hasInput) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Harap isi minimal satu porsi makanan terlebih dahulu'),
+        ),
+      );
+      return;
+    }
+
     // Construct [[id_makanan, jumlah], ...]
     final List<List<int>> dataArray = [];
     _nutritionPortions.forEach((foodId, portion) {
@@ -150,6 +197,41 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
       Navigator.pop(context); // Close loading dialog
 
       final List<dynamic> results = response['data'] ?? [];
+
+      // Backend mengembalikan peringatan jika umur di luar range 6-59 bulan
+      final isWarning = results.isNotEmpty &&
+          (results[0]['makanan'] ?? '') == 'Peringatan!';
+
+      if (!mounted) return;
+
+      if (isWarning) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded,
+                    color: Colors.orange, size: 24.0),
+                const SizedBox(width: 8.0),
+                const Text('Tidak Dapat Dihitung'),
+              ],
+            ),
+            content: Text(
+              results[0]['keterangan'] ?? 'Umur anak di luar rentang yang didukung.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Mengerti'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
 
       if (mounted) {
         showModalBottomSheet(
@@ -429,21 +511,6 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
 
               if (_selectedTab == 'tumbuh_kembang') ...[
                 Text(
-                  'Berat Badan (kg)',
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 12.0),
-                _buildInputField(
-                  controller: _weightController,
-                  hint: 'Contoh: 12.5',
-                  icon: Icons.scale_rounded,
-                ),
-                const SizedBox(height: 24.0),
-
-                Text(
                   'Tinggi/Panjang Badan (cm)',
                   style: AppTypography.titleMedium.copyWith(
                     fontWeight: FontWeight.bold,
@@ -505,7 +572,8 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                           final int id = food['id'];
                           final String name = food['nama'] ?? '';
                           final String desc = food['deskripsi'] ?? '';
-                          return _buildNutritionItem(id, name, desc);
+                          final String satuan = food['satuan'] ?? '';
+                          return _buildNutritionItem(id, name, desc, satuan);
                         }).toList(),
                       ),
                 const SizedBox(height: 32.0),
@@ -537,7 +605,7 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
     );
   }
 
-  Widget _buildNutritionItem(int id, String name, String subtitle) {
+  Widget _buildNutritionItem(int id, String name, String subtitle, String satuan) {
     final portion = _nutritionPortions[id] ?? 0;
     final icon = _getFoodIcon(name);
 
@@ -619,16 +687,25 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 16.0),
-              SizedBox(
-                width: 24.0,
-                child: Text(
-                  '$portion',
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.onSurface,
+              Column(
+                children: [
+                  Text(
+                    '$portion',
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.onSurface,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
+                  if (satuan.isNotEmpty)
+                    Text(
+                      satuan,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.onSurfaceVariant.withOpacity(0.6),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                ],
               ),
               const SizedBox(width: 16.0),
               IconButton(
@@ -674,38 +751,6 @@ class _CalculatorInputScreenState extends State<CalculatorInputScreen> {
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20.0,
             vertical: 16.0,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRadioOption(String value) {
-    final isSelected = _measurementPosition == value;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _measurementPosition = value;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryContainer.withOpacity(0.2)
-              : AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          value,
-          style: AppTypography.titleSmall.copyWith(
-            fontWeight: FontWeight.bold,
-            color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
           ),
         ),
       ),
