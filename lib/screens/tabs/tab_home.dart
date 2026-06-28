@@ -97,6 +97,15 @@ class _TabHomeState extends State<TabHome> {
     return minutes < 1 ? 1 : minutes;
   }
 
+  String _translateCategory(String raw) {
+    switch (raw) {
+      case 'Pencegahan': return 'Remaja';
+      case 'Nutrisi':    return 'Balita';
+      case 'Edukasi':    return 'Ibu Hamil';
+      default:           return raw;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -569,7 +578,7 @@ class _TabHomeState extends State<TabHome> {
 
   Widget _buildArticleItem(Map<String, dynamic> item) {
     final String title = item['judul'] ?? '';
-    final String category = item['kategori'] ?? 'Pencegahan';
+    final String category = _translateCategory(item['kategori'] ?? 'Pencegahan');
     final String desc = item['deskripsi'] ?? '';
     final String readTime = '${_calculateReadTime(desc)} Menit Baca';
     final String? urlVideo = item['url_video'];

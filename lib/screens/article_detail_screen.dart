@@ -141,10 +141,19 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     return minutes < 1 ? 1 : minutes;
   }
 
+  String _translateCategory(String raw) {
+    switch (raw) {
+      case 'Pencegahan': return 'Remaja';
+      case 'Nutrisi':    return 'Balita';
+      case 'Edukasi':    return 'Ibu Hamil';
+      default:           return raw;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = widget.article['judul'] ?? '';
-    final category = widget.article['kategori'] ?? 'Pencegahan';
+    final category = _translateCategory(widget.article['kategori'] ?? '');
     final desc = widget.article['deskripsi'] ?? '';
     final formattedDate = widget.article['formatted_created_at'] ?? '';
     final readTime = '${_calculateReadTime(desc)} Menit Baca';

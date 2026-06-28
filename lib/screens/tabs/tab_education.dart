@@ -16,14 +16,14 @@ class TabEducation extends StatefulWidget {
 }
 
 class _TabEducationState extends State<TabEducation> {
-  final List<String> _categories = [
-    'Semua',
-    'Pencegahan',
-    'Nutrisi',
-    'Edukasi',
-    'Kesehatan',
-    'Tersimpan',
-  ];
+  // label tampilan → nilai API (null = semua, 'Tersimpan' = local storage)
+  static const Map<String, String?> _categoryMap = {
+    'Semua': null,
+    'Remaja': 'Pencegahan',
+    'Balita': 'Nutrisi',
+    'Ibu Hamil': 'Edukasi',
+    'Tersimpan': 'Tersimpan',
+  };
 
   String _selectedCategory = 'Semua';
   bool _isLoading = true;
@@ -80,7 +80,8 @@ class _TabEducationState extends State<TabEducation> {
 
     // Online: fetch dari API
     try {
-      final categoryParam = _selectedCategory == 'Semua' ? null : _selectedCategory;
+      // Translate label tampilan ke nilai API yang dikenal backend
+      final categoryParam = _categoryMap[_selectedCategory];
       final data = await ApiService.getArticles(category: categoryParam);
       if (mounted) {
         setState(() {
@@ -102,6 +103,16 @@ class _TabEducationState extends State<TabEducation> {
               : null;
         });
       }
+    }
+  }
+
+  /// Translate nilai kategori backend ke label tampilan
+  static String _translateCategory(String raw) {
+    switch (raw) {
+      case 'Pencegahan': return 'Remaja';
+      case 'Nutrisi':    return 'Balita';
+      case 'Edukasi':    return 'Ibu Hamil';
+      default:           return raw;
     }
   }
 
@@ -142,9 +153,9 @@ class _TabEducationState extends State<TabEducation> {
                 height: 40.0,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
+                  itemCount: _categoryMap.length,
                   itemBuilder: (context, index) {
-                    final cat = _categories[index];
+                    final cat = _categoryMap.keys.elementAt(index);
                     final isSelected = _selectedCategory == cat;
                     final isSavedTab = cat == 'Tersimpan';
                     return Padding(
@@ -321,7 +332,7 @@ class _TabEducationState extends State<TabEducation> {
   Widget _buildArticleCard(Map<String, dynamic> item) {
     final String title = item['judul'] ?? '';
     final String desc = item['deskripsi'] ?? '';
-    final String category = item['kategori'] ?? 'Pencegahan';
+    final String category = _translateCategory(item['kategori'] ?? 'Pencegahan');
     final String formattedDate = item['formatted_created_at'] ?? '';
     final String readTime = '${_calculateReadTime(desc)} Menit Baca';
     final String? urlVideo = item['url_video'] as String?;
