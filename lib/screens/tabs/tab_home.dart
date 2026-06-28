@@ -99,10 +99,14 @@ class _TabHomeState extends State<TabHome> {
 
   String _translateCategory(String raw) {
     switch (raw) {
-      case 'Pencegahan': return 'Remaja';
-      case 'Nutrisi':    return 'Balita';
-      case 'Edukasi':    return 'Ibu Hamil';
-      default:           return raw;
+      case 'Pencegahan':
+        return 'Remaja';
+      case 'Nutrisi':
+        return 'Balita';
+      case 'Edukasi':
+        return 'Ibu Hamil';
+      default:
+        return raw;
     }
   }
 
@@ -154,16 +158,20 @@ class _TabHomeState extends State<TabHome> {
                 CircleAvatar(
                   radius: 28.0,
                   backgroundColor: AppColors.secondaryContainer,
-                  child: const Icon(
-                    Icons.face_3_rounded,
-                    color: AppColors.onSecondaryContainer,
-                    size: 32.0,
+                  child: Center(
+                    child: Text(
+                      _namaIbu[0],
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 28.0),
-  
+
             // Overview Health Card (Asymmetric Design)
             Container(
               padding: const EdgeInsets.all(20.0),
@@ -232,7 +240,7 @@ class _TabHomeState extends State<TabHome> {
               ),
             ),
             const SizedBox(height: 28.0),
-  
+
             // Quick Action Grid
             Text(
               'Layanan Pintar',
@@ -254,7 +262,8 @@ class _TabHomeState extends State<TabHome> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const CalculatorSelectProfileScreen(),
+                          builder: (context) =>
+                              const CalculatorSelectProfileScreen(),
                         ),
                       );
                     },
@@ -272,7 +281,8 @@ class _TabHomeState extends State<TabHome> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ChildrenManagementScreen(),
+                          builder: (context) =>
+                              const ChildrenManagementScreen(),
                         ),
                       );
                     },
@@ -281,7 +291,7 @@ class _TabHomeState extends State<TabHome> {
               ],
             ),
             const SizedBox(height: 28.0),
-  
+
             // Horizontal Child Profiles list
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -313,7 +323,7 @@ class _TabHomeState extends State<TabHome> {
             const SizedBox(height: 8.0),
             _buildChildrenSection(),
             const SizedBox(height: 28.0),
-  
+
             // Recent Articles list
             Text(
               'Edukasi',
@@ -350,7 +360,9 @@ class _TabHomeState extends State<TabHome> {
         alignment: Alignment.center,
         child: Text(
           'Belum ada data buah hati terdaftar.',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
       );
     }
@@ -365,11 +377,11 @@ class _TabHomeState extends State<TabHome> {
           final child = _children[index];
           final String name = child['nama'] ?? '';
           final String age = _formatAge(child['umur']);
-          
+
           final String status;
           final Color statusColor;
           final int? statusStunting = child['status_stunting'];
-          
+
           if (statusStunting == 1) {
             status = 'Sangat Pendek';
             statusColor = AppColors.error;
@@ -418,7 +430,9 @@ class _TabHomeState extends State<TabHome> {
         alignment: Alignment.center,
         child: Text(
           'Belum ada artikel terkini.',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
       );
     }
@@ -432,7 +446,10 @@ class _TabHomeState extends State<TabHome> {
         if (_isOffline)
           Container(
             margin: const EdgeInsets.only(bottom: 12.0),
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 10.0,
+            ),
             decoration: BoxDecoration(
               color: Colors.orange.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12.0),
@@ -440,7 +457,11 @@ class _TabHomeState extends State<TabHome> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.wifi_off_rounded, color: Colors.orange, size: 16.0),
+                const Icon(
+                  Icons.wifi_off_rounded,
+                  color: Colors.orange,
+                  size: 16.0,
+                ),
                 const SizedBox(width: 8.0),
                 Expanded(
                   child: Text(
@@ -578,13 +599,18 @@ class _TabHomeState extends State<TabHome> {
 
   Widget _buildArticleItem(Map<String, dynamic> item) {
     final String title = item['judul'] ?? '';
-    final String category = _translateCategory(item['kategori'] ?? 'Pencegahan');
+    final String category = _translateCategory(
+      item['kategori'] ?? 'Pencegahan',
+    );
     final String desc = item['deskripsi'] ?? '';
     final String readTime = '${_calculateReadTime(desc)} Menit Baca';
     final String? urlVideo = item['url_video'];
-    final String? videoId = (urlVideo != null && urlVideo.isNotEmpty) ? YoutubePlayer.convertUrlToId(urlVideo) : null;
+    final String? videoId = (urlVideo != null && urlVideo.isNotEmpty)
+        ? YoutubePlayer.convertUrlToId(urlVideo)
+        : null;
     final String? gambar = item['gambar'] as String?;
-    final bool hasPoster = gambar != null && gambar.isNotEmpty && gambar != 'gambar2';
+    final bool hasPoster =
+        gambar != null && gambar.isNotEmpty && gambar != 'gambar2';
     final String? posterUrl = hasPoster
         ? 'https://sipenting.bondowosokab.go.id/storage/artikel/$gambar'
         : null;
