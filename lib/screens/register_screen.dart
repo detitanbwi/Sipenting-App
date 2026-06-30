@@ -21,19 +21,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirmPassword = true;
 
   // Dropdown States
+  List<dynamic> _regencies = [];
   List<dynamic> _districts = [];
   List<dynamic> _villages = [];
 
+  String? _selectedRegencyCode;
   String? _selectedDistrictCode;
   String? _selectedVillageCode;
 
+  bool _isLoadingRegencies = false;
   bool _isLoadingDistricts = false;
   bool _isLoadingVillages = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchKecamatan();
+    _fetchKabupaten();
   }
 
   @override
@@ -45,7 +48,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchKecamatan() async {
+  Future<void> _fetchKabupaten() async {
+    setState(() {
+      _isLoadingRegencies = true;
+      _regencies = [];
+      _selectedRegencyCode = null;
+      _districts = [];
+      _selectedDistrictCode = null;
+      _villages = [];
+      _selectedVillageCode = null;
+    });
+    try {
+      final data = await ApiService.getKabupaten();
+      setState(() {
+        _regencies = data.map((item) {
+          final id = item['id'] ?? item['code'];
+          final name = item['name'] ?? item['nama'];
+          return {
+            'code': id.toString(),
+            'name': name.toString(),
+          };
+        }).toList();
+      });
+    } catch (e) {
+      debugPrint('Error fetching kabupaten: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memuat kabupaten: ${e.toString().replaceFirst('Exception: ', '')}',
+              style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoadingRegencies = false;
+      });
+    }
+  }
+
+  Future<void> _fetchKecamatan(String regencyCode) async {
     setState(() {
       _isLoadingDistricts = true;
       _districts = [];
@@ -54,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _selectedVillageCode = null;
     });
     try {
-      final data = await ApiService.getKecamatan();
+      final data = await ApiService.getKecamatan(idKabupaten: regencyCode);
       setState(() {
         _districts = data.map((item) {
           final id = item['id_kecamatan'] ?? item['id'] ?? item['code'];
@@ -283,11 +329,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     if (_formKey.currentState!.validate()) {
-      if (_selectedDistrictCode == null || _selectedVillageCode == null) {
+      if (_selectedDistrictCode == null || _selectedVillageCode == null || _selectedRegencyCode == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Harap lengkapi pilihan Wilayah (Kecamatan, Desa)',
+              'Harap lengkapi pilihan Wilayah (Kabupaten, Kecamatan, Desa)',
               style: AppTypography.bodyMedium.copyWith(color: Colors.white),
             ),
             backgroundColor: AppColors.error,
@@ -534,6 +580,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return null;
                         },
                       ),
+                      const SizedBox(height: 20.0),
+                      // Dropdown: Kabupaten
+                      _buildDropdownDecoration(
+                        label: 'Kabupaten',
+                        isLoading: _isLoadingRegencies,
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: _selectedRegencyCode,
+                          hint: Text(
+                            'Pilih Kabupaten',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.onSurfaceVariant.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                          icon: const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                          items: _regencies.map<DropdownMenuItem<String>>((
+                            dynamic item,
+                          ) {
+                            return DropdownMenuItem<String>(
+                              value: item['code'],
+                              child: Text(
+                                item['name'] ?? '',
+                                style: AppTypography.bodyMedium,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (String? code) {
+                            if (code != null) {
+                              setState(() {
+                                _selectedRegencyCode = code;
+                              });
+                              _fetchKecamatan(code);
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20.0),
                       // Dropdown: Kecamatan
                       _buildDropdownDecoration(
                         label: 'Kecamatan',
@@ -564,14 +652,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             );
                           }).toList(),
-                          onChanged: (String? code) {
-                            if (code != null) {
-                              setState(() {
-                                _selectedDistrictCode = code;
-                              });
-                              _fetchDesa(code);
-                            }
-                          },
+                          onChanged: _selectedRegencyCode == null
+                              ? null
+                              : (String? code) {
+                                  if (code != null) {
+                                    setState(() {
+                                      _selectedDistrictCode = code;
+                                    });
+                                    _fetchDesa(code);
+                                  }
+                                },
                         ),
                       ),
                       const SizedBox(height: 20.0),

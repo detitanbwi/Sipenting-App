@@ -30,9 +30,17 @@ class _TabProfileState extends State<TabProfile> {
     });
     try {
       final data = await ApiService.getUser();
-      if (mounted) setState(() { _userData = data; _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _userData = data;
+          _isLoading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _errorMessage = e.toString(); _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
     }
   }
 
@@ -51,19 +59,28 @@ class _TabProfileState extends State<TabProfile> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceContainerLowest,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.0),
+        ),
         title: Text(
           'Keluar dari Aplikasi?',
           style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
         ),
         content: Text(
           'Anda akan keluar dari akun ini. Data tersimpan lokal tidak akan terhapus.',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal', style: AppTypography.labelLarge.copyWith(color: AppColors.onSurfaceVariant)),
+            child: Text(
+              'Batal',
+              style: AppTypography.labelLarge.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -97,10 +114,12 @@ class _TabProfileState extends State<TabProfile> {
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              )
             : _errorMessage != null
-                ? _buildError()
-                : _buildContent(),
+            ? _buildError()
+            : _buildContent(),
       ),
     );
   }
@@ -112,17 +131,25 @@ class _TabProfileState extends State<TabProfile> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.wifi_off_rounded, size: 56.0, color: AppColors.onSurfaceVariant.withValues(alpha: 0.4)),
+            Icon(
+              Icons.wifi_off_rounded,
+              size: 56.0,
+              color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16.0),
             Text(
               'Gagal memuat profil',
-              style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8.0),
             Text(
               _errorMessage ?? '',
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 24.0),
             OutlinedButton.icon(
@@ -132,7 +159,9 @@ class _TabProfileState extends State<TabProfile> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 side: const BorderSide(color: AppColors.primary),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.0),
+                ),
               ),
             ),
           ],
@@ -148,168 +177,204 @@ class _TabProfileState extends State<TabProfile> {
     final tinggiBadan = _userData?['tinggiBadan']?.toString() ?? '-';
     final bbPraHamil = _userData?['bbPraHamil']?.toString() ?? '-';
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Profil Pengguna',
-            style: AppTypography.headlineMedium.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
+    return RefreshIndicator(
+      onRefresh: _loadUserData,
+      color: AppColors.primary,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Profil Pengguna',
+              style: AppTypography.headlineMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 24.0),
+            const SizedBox(height: 24.0),
 
-          // Profile Header Card
-          Container(
-            padding: const EdgeInsets.all(24.0),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(24.0),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.onSurface.withValues(alpha: 0.02),
-                  blurRadius: 16.0,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 36.0,
-                  backgroundColor: AppColors.secondaryFixed,
-                  child: Text(
-                    namaIbu.isNotEmpty ? namaIbu[0].toUpperCase() : '?',
-                    style: AppTypography.headlineMedium.copyWith(
-                      color: AppColors.onSecondaryContainer,
-                      fontWeight: FontWeight.bold,
+            // Profile Header Card
+            Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(24.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.onSurface.withValues(alpha: 0.02),
+                    blurRadius: 16.0,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 36.0,
+                    backgroundColor: AppColors.secondaryFixed,
+                    child: Text(
+                      namaIbu.isNotEmpty ? namaIbu[0].toUpperCase() : '?',
+                      style: AppTypography.headlineMedium.copyWith(
+                        color: AppColors.onSecondaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 18.0),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        namaIbu,
-                        style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4.0),
-                      Text(
-                        'NIK: $nik',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.onSurfaceVariant.withValues(alpha: 0.8),
+                  const SizedBox(width: 18.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          namaIbu,
+                          style: AppTypography.titleLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4.0),
+                        Text(
+                          'NIK: $nik',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.onSurfaceVariant.withValues(
+                              alpha: 0.8,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                IconButton(
-                  onPressed: _showEditProfileSheet,
-                  icon: const Icon(Icons.edit_rounded),
-                  tooltip: 'Edit Profil',
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.primaryContainer,
-                    foregroundColor: AppColors.onPrimaryContainer,
+                  IconButton(
+                    onPressed: _showEditProfileSheet,
+                    icon: const Icon(Icons.edit_rounded),
+                    tooltip: 'Edit Profil',
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.primaryContainer,
+                      foregroundColor: AppColors.onPrimaryContainer,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24.0),
+            const SizedBox(height: 24.0),
 
-          // Data Pribadi
-          Text(
-            'Data Pribadi',
-            style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12.0),
-          Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(20.0),
+            // Data Pribadi
+            Text(
+              'Data Pribadi',
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            child: Column(
-              children: [
-                _buildInfoRow('Tanggal Lahir', tanggalLahir != '-' ? _formatDate(tanggalLahir) : '-'),
-                const Divider(height: 24.0, color: AppColors.outlineVariant),
-                _buildInfoRow('Tinggi Badan', tinggiBadan != '-' ? '$tinggiBadan cm' : '-'),
-                const Divider(height: 24.0, color: AppColors.outlineVariant),
-                _buildInfoRow('BB Pra Hamil', bbPraHamil != '-' ? '$bbPraHamil kg' : '-'),
-              ],
+            const SizedBox(height: 12.0),
+            Container(
+              padding: const EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              child: Column(
+                children: [
+                  _buildInfoRow(
+                    'Tanggal Lahir',
+                    tanggalLahir != '-' ? _formatDate(tanggalLahir) : '-',
+                  ),
+                  const Divider(height: 24.0, color: AppColors.outlineVariant),
+                  _buildInfoRow(
+                    'Tinggi Badan',
+                    tinggiBadan != '-' ? '$tinggiBadan cm' : '-',
+                  ),
+                  const Divider(height: 24.0, color: AppColors.outlineVariant),
+                  _buildInfoRow(
+                    'BB Pra Hamil',
+                    bbPraHamil != '-' ? '$bbPraHamil kg' : '-',
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24.0),
+            const SizedBox(height: 24.0),
 
-          // Informasi Wilayah
-          Text(
-            'Informasi Wilayah',
-            style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12.0),
-          Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(20.0),
+            // Informasi Wilayah
+            Text(
+              'Informasi Wilayah',
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            child: Column(
-              children: [
-                _buildInfoRow('Kabupaten', 'Bondowoso'),
-                const Divider(height: 24.0, color: AppColors.outlineVariant),
-                _buildInfoRow('Kode Wilayah', _userData?['id_villages']?.toString() ?? '-'),
-              ],
+            const SizedBox(height: 12.0),
+            Container(
+              padding: const EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              child: Column(
+                children: [
+                  _buildInfoRow(
+                    'Kabupaten',
+                    _userData?['village']?['district']?['regency']?['name'] ??
+                        '-',
+                  ),
+                  const Divider(height: 24.0, color: AppColors.outlineVariant),
+                  _buildInfoRow(
+                    'Kecamatan',
+                    _userData?['village']?['district']?['name'] ?? '-',
+                  ),
+                  const Divider(height: 24.0, color: AppColors.outlineVariant),
+                  _buildInfoRow('Desa', _userData?['village']?['name'] ?? '-'),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 28.0),
+            const SizedBox(height: 28.0),
 
-          // Menu Layanan
-          Text(
-            'Pengaturan & Layanan',
-            style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12.0),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(24.0),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.onSurface.withValues(alpha: 0.02),
-                  blurRadius: 16.0,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+            // Menu Layanan
+            Text(
+              'Pengaturan & Layanan',
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            child: Column(
-              children: [
-                _buildMenuTile(
-                  Icons.person_outline_rounded,
-                  'Edit Profil',
-                  _showEditProfileSheet,
-                ),
-                _buildMenuTile(
-                  Icons.info_outline_rounded,
-                  'Tentang Aplikasi',
-                  () => _showAboutDialog(context),
-                ),
-                const Divider(height: 1.0, color: AppColors.surfaceContainerLow),
-                _buildMenuTile(
-                  Icons.logout_rounded,
-                  'Keluar dari Aplikasi',
-                  _confirmLogout,
-                  isDestructive: true,
-                ),
-              ],
+            const SizedBox(height: 12.0),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(24.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.onSurface.withValues(alpha: 0.02),
+                    blurRadius: 16.0,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildMenuTile(
+                    Icons.person_outline_rounded,
+                    'Edit Profil',
+                    _showEditProfileSheet,
+                  ),
+                  _buildMenuTile(
+                    Icons.info_outline_rounded,
+                    'Tentang Aplikasi',
+                    () => _showAboutDialog(context),
+                  ),
+                  const Divider(
+                    height: 1.0,
+                    color: AppColors.surfaceContainerLow,
+                  ),
+                  _buildMenuTile(
+                    Icons.logout_rounded,
+                    'Keluar dari Aplikasi',
+                    _confirmLogout,
+                    isDestructive: true,
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 32.0),
-        ],
+            const SizedBox(height: 32.0),
+          ],
+        ),
       ),
     );
   }
@@ -320,8 +385,19 @@ class _TabProfileState extends State<TabProfile> {
       final parts = raw.split('-');
       if (parts.length == 3) {
         const months = [
-          '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+          '',
+          'Januari',
+          'Februari',
+          'Maret',
+          'April',
+          'Mei',
+          'Juni',
+          'Juli',
+          'Agustus',
+          'September',
+          'Oktober',
+          'November',
+          'Desember',
         ];
         final m = int.tryParse(parts[1]) ?? 0;
         return '${parts[2]} ${m > 0 && m <= 12 ? months[m] : parts[1]} ${parts[0]}';
@@ -334,27 +410,46 @@ class _TabProfileState extends State<TabProfile> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: AppTypography.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+        Text(
+          label,
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(width: 16.0),
         Flexible(
           child: Text(
             value,
             textAlign: TextAlign.end,
-            style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMenuTile(IconData icon, String title, VoidCallback onTap, {bool isDestructive = false}) {
+  Widget _buildMenuTile(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    bool isDestructive = false,
+  }) {
     final color = isDestructive ? AppColors.error : AppColors.onSurface;
     return ListTile(
       leading: Icon(icon, color: color, size: 22.0),
       title: Text(title, style: AppTypography.bodyLarge.copyWith(color: color)),
-      trailing: Icon(Icons.chevron_right_rounded, color: color.withValues(alpha: 0.4), size: 20.0),
+      trailing: Icon(
+        Icons.chevron_right_rounded,
+        color: color.withValues(alpha: 0.4),
+        size: 20.0,
+      ),
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 20.0,
+        vertical: 4.0,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
     );
   }
@@ -450,9 +545,16 @@ class _TabProfileState extends State<TabProfile> {
                   foregroundColor: AppColors.onPrimary,
                   minimumSize: const Size.fromHeight(48.0),
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24.0),
+                  ),
                 ),
-                child: Text('Tutup', style: AppTypography.labelLarge.copyWith(color: AppColors.onPrimary)),
+                child: Text(
+                  'Tutup',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: AppColors.onPrimary,
+                  ),
+                ),
               ),
             ],
           ),
@@ -484,10 +586,18 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
   @override
   void initState() {
     super.initState();
-    _namaIbuCtrl = TextEditingController(text: widget.userData['namaIbu'] ?? '');
-    _tanggalLahirCtrl = TextEditingController(text: widget.userData['tanggalLahir'] ?? '');
-    _tinggiBadanCtrl = TextEditingController(text: widget.userData['tinggiBadan']?.toString() ?? '');
-    _bbPraHamilCtrl = TextEditingController(text: widget.userData['bbPraHamil']?.toString() ?? '');
+    _namaIbuCtrl = TextEditingController(
+      text: widget.userData['namaIbu'] ?? '',
+    );
+    _tanggalLahirCtrl = TextEditingController(
+      text: widget.userData['tanggalLahir'] ?? '',
+    );
+    _tinggiBadanCtrl = TextEditingController(
+      text: widget.userData['tinggiBadan']?.toString() ?? '',
+    );
+    _bbPraHamilCtrl = TextEditingController(
+      text: widget.userData['bbPraHamil']?.toString() ?? '',
+    );
   }
 
   @override
@@ -544,7 +654,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
             content: const Text('Profil berhasil diperbarui'),
             backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
           ),
         );
       }
@@ -556,7 +668,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
             content: Text('Gagal memperbarui profil: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
           ),
         );
       }
@@ -593,12 +707,16 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
               const SizedBox(height: 20.0),
               Text(
                 'Edit Profil',
-                style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+                style: AppTypography.titleLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4.0),
               Text(
                 'NIK tidak dapat diubah melalui aplikasi.',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 24.0),
 
@@ -608,7 +726,9 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 label: 'Nama Lengkap',
                 hint: 'Masukkan nama lengkap',
                 icon: Icons.person_outline_rounded,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Nama tidak boleh kosong' : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Nama tidak boleh kosong'
+                    : null,
               ),
               const SizedBox(height: 16.0),
 
@@ -643,8 +763,12 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                 label: 'Berat Badan Pra Hamil (kg)',
                 hint: 'Contoh: 55',
                 icon: Icons.monitor_weight_outlined,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,1}'))],
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,1}')),
+                ],
               ),
               const SizedBox(height: 28.0),
 
@@ -655,15 +779,25 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                   foregroundColor: AppColors.onPrimary,
                   minimumSize: const Size.fromHeight(52.0),
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24.0),
+                  ),
                 ),
                 child: _isSaving
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.0, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                          color: Colors.white,
+                        ),
                       )
-                    : Text('Simpan Perubahan', style: AppTypography.labelLarge.copyWith(color: AppColors.onPrimary)),
+                    : Text(
+                        'Simpan Perubahan',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.onPrimary,
+                        ),
+                      ),
               ),
             ],
           ),
@@ -712,7 +846,10 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
           borderRadius: BorderRadius.circular(16.0),
           borderSide: BorderSide(color: AppColors.error, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 16.0,
+        ),
       ),
     );
   }

@@ -16,19 +16,25 @@ class DashboardShell extends StatefulWidget {
 class _DashboardShellState extends State<DashboardShell> {
   int _currentIndex = 0;
 
-  final List<Widget> _tabs = const [
-    TabHome(),
-    TabHistory(),
-    TabEducation(),
-    TabProfile(),
-  ];
+  void _navigateToTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> tabs = [
+      TabHome(onNavigateToProfile: () => _navigateToTab(3)),
+      const TabHistory(),
+      const TabEducation(),
+      const TabProfile(),
+    ];
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: IndexedStack(index: _currentIndex, children: _tabs),
+        child: IndexedStack(index: _currentIndex, children: tabs),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

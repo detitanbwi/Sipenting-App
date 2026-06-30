@@ -11,7 +11,9 @@ import '../../widgets/article_thumbnail.dart';
 import '../article_detail_screen.dart';
 
 class TabHome extends StatefulWidget {
-  const TabHome({super.key});
+  final VoidCallback? onNavigateToProfile;
+
+  const TabHome({super.key, this.onNavigateToProfile});
 
   @override
   State<TabHome> createState() => _TabHomeState();
@@ -155,14 +157,15 @@ class _TabHomeState extends State<TabHome> {
                     ],
                   ),
                 ),
-                CircleAvatar(
-                  radius: 28.0,
-                  backgroundColor: AppColors.secondaryContainer,
-                  child: Center(
+                GestureDetector(
+                  onTap: widget.onNavigateToProfile,
+                  child: CircleAvatar(
+                    radius: 28.0,
+                    backgroundColor: AppColors.secondaryFixed,
                     child: Text(
-                      _namaIbu[0],
-                      style: TextStyle(
-                        fontSize: 28,
+                      _namaIbu.isNotEmpty ? _namaIbu[0].toUpperCase() : '?',
+                      style: AppTypography.headlineMedium.copyWith(
+                        color: AppColors.onSecondaryContainer,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

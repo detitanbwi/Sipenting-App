@@ -19,9 +19,9 @@ class _TabEducationState extends State<TabEducation> {
   // label tampilan → nilai API (null = semua, 'Tersimpan' = local storage)
   static const Map<String, String?> _categoryMap = {
     'Semua': null,
-    'Remaja': 'Pencegahan',
-    'Balita': 'Nutrisi',
-    'Ibu Hamil': 'Edukasi',
+    'Balita': 'Balita',
+    'Remaja/Catin': 'Remaja/Catin',
+    'Ibu Hamil': 'Ibu Hamil',
     'Tersimpan': 'Tersimpan',
   };
 

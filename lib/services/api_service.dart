@@ -21,9 +21,30 @@ class ApiService {
     await _storage.delete(key: _tokenKey);
   }
 
-  /// Fetch list of Kecamatan (GET /kecamatan)
-  static Future<List<dynamic>> getKecamatan() async {
-    final url = Uri.parse('$baseUrl/kecamatan');
+  /// Fetch list of Kabupaten (GET /kabupaten)
+  static Future<List<dynamic>> getKabupaten() async {
+    final url = Uri.parse('$baseUrl/kabupaten');
+    final response = await http.get(url).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      if (decoded is Map && decoded.containsKey('data')) {
+        return decoded['data'] ?? [];
+      } else if (decoded is List) {
+        return decoded;
+      }
+      return [];
+    } else {
+      throw Exception(
+        'Gagal memuat data kabupaten (Status: ${response.statusCode})',
+      );
+    }
+  }
+
+  /// Fetch list of Kecamatan (GET /kecamatan?id_kabupaten=xxxx)
+  static Future<List<dynamic>> getKecamatan({String? idKabupaten}) async {
+    final query = idKabupaten != null ? '?id_kabupaten=$idKabupaten' : '';
+    final url = Uri.parse('$baseUrl/kecamatan$query');
     final response = await http.get(url).timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 200) {
